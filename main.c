@@ -92,8 +92,7 @@ int main(void)
 
   // TODO: Start timer TIM16
 
-/*here you initialize the the TIM16*/
-
+  HAL_TIM_Base_Start(&htim16);
   /* USER CODE END 2 */
 
   /* Infinite loop */
