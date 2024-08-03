@@ -92,6 +92,8 @@ int main(void)
 
   // TODO: Start timer TIM16
 
+/*here you initialize the the TIM16*/
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
