@@ -5,7 +5,7 @@
   * @brief          : Main program body
   ******************************************************************************
   * @attention
-  *Amos
+  *
   * Copyright (c) 2023 STMicroelectronics.
   * All rights reserved.
   *
@@ -43,9 +43,22 @@
 TIM_HandleTypeDef htim16;
 
 /* USER CODE BEGIN PV */
-// TODO: Define input variables
+// Define LED patterns
+const uint8_t led_patterns[9] = {
+  0b11101001, // 1 1 1 0 1 0 0 1
+  0b11010010, // 1 1 0 1 0 0 1 0
+  0b10100100, // 1 0 1 0 0 1 0 0
+  0b01001000, // 0 1 0 0 1 0 0 0
+  0b10010000, // 1 0 0 1 0 0 0 0
+  0b00100000, // 0 0 1 0 0 0 0 0
+  0b01000000, // 0 1 0 0 0 0 0 0
+  0b10000000, // 1 0 0 0 0 0 0 0
+  0b00000000  // 0 0 0 0 0 0 0 0
+};
 
-
+// Variables to keep track of current pattern and timer delay
+volatile uint8_t current_pattern_index = 0;
+volatile uint32_t timer_delay = 100; // Default to 1 second
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -54,6 +67,7 @@ static void MX_GPIO_Init(void);
 static void MX_TIM16_Init(void);
 /* USER CODE BEGIN PFP */
 void TIM16_IRQHandler(void);
+void update_leds(uint8_t pattern);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -90,23 +104,32 @@ int main(void)
   MX_TIM16_Init();
   /* USER CODE BEGIN 2 */
 
-  // TODO: Start timer TIM16
+  // Start timer TIM16 in interrupt mode
+  HAL_TIM_Base_Start_IT(&htim16);
 
-  HAL_TIM_Base_Start(&htim16);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    // Check pushbuttons to change timer delay
+    if (LL_GPIO_IsInputPinSet(Button0_GPIO_Port, Button0_Pin) == 0) {
+      timer_delay = 60; // 0.5 s delay
+      __HAL_TIM_SET_AUTORELOAD(&htim16, (timer_delay * 8) - 1);
+    } else if (LL_GPIO_IsInputPinSet(Button1_GPIO_Port, Button1_Pin) == 0) {
+      timer_delay = 250; // 2 s delay
+      __HAL_TIM_SET_AUTORELOAD(&htim16, (timer_delay * 8) - 1);
+    } else if (LL_GPIO_IsInputPinSet(Button2_GPIO_Port, Button2_Pin) == 0) {
+      timer_delay = 125; // 1 s delay
+      __HAL_TIM_SET_AUTORELOAD(&htim16, (timer_delay * 8) - 1);
+    } else if (LL_GPIO_IsInputPinSet(Button3_GPIO_Port, Button3_Pin) == 0) {
+      current_pattern_index = 0; // Reset to pattern 1
+      update_leds(led_patterns[current_pattern_index]);
+    }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-
-    // TODO: Check pushbuttons to change timer delay
-    
-    
-
   }
   /* USER CODE END 3 */
 }
@@ -322,13 +345,56 @@ static void MX_GPIO_Init(void)
 // Timer rolled over
 void TIM16_IRQHandler(void)
 {
-	// Acknowledge interrupt
-	HAL_TIM_IRQHandler(&htim16);
+  // Acknowledge interrupt
+  HAL_TIM_IRQHandler(&htim16);
 
-	// TODO: Change LED pattern
-	// print something
+  // Change LED pattern
+  current_pattern_index = (current_pattern_index + 1) % 9;
+  update_leds(led_patterns[current_pattern_index]);
+}
 
-  
+// Update LED states based on the current pattern
+void update_leds(uint8_t pattern)
+{
+  for (int i = 0; i < 8; ++i) {
+    uint8_t pin_state = (pattern >> i) & 0x01;
+    switch (i) {
+      case 0:
+        if (pin_state) LL_GPIO_SetOutputPin(LED0_GPIO_Port, LED0_Pin);
+        else LL_GPIO_ResetOutputPin(LED0_GPIO_Port, LED0_Pin);
+        break;
+      case 1:
+        if (pin_state) LL_GPIO_SetOutputPin(LED1_GPIO_Port, LED1_Pin);
+        else LL_GPIO_ResetOutputPin(LED1_GPIO_Port, LED1_Pin);
+        break;
+      case 2:
+        if (pin_state) LL_GPIO_SetOutputPin(LED2_GPIO_Port, LED2_Pin);
+        else LL_GPIO_ResetOutputPin(LED2_GPIO_Port, LED2_Pin);
+        break;
+      case 3:
+        if (pin_state) LL_GPIO_SetOutputPin(LED3_GPIO_Port, LED3_Pin);
+        else LL_GPIO_ResetOutputPin(LED3_GPIO_Port, LED3_Pin);
+        break;
+      case 4:
+        if (pin_state) LL_GPIO_SetOutputPin(LED4_GPIO_Port, LED4_Pin);
+        else LL_GPIO_ResetOutputPin(LED4_GPIO_Port, LED4_Pin);
+        break;
+      case 5:
+        if (pin_state) LL_GPIO_SetOutputPin(LED5_GPIO_Port, LED5_Pin);
+        else LL_GPIO_ResetOutputPin(LED5_GPIO_Port, LED5_Pin);
+        break;
+      case 6:
+        if (pin_state) LL_GPIO_SetOutputPin(LED6_GPIO_Port, LED6_Pin);
+        else LL_GPIO_ResetOutputPin(LED6_GPIO_Port, LED6_Pin);
+        break;
+      case 7:
+        if (pin_state) LL_GPIO_SetOutputPin(LED7_GPIO_Port, LED7_Pin);
+        else LL_GPIO_ResetOutputPin(LED7_GPIO_Port, LED7_Pin);
+        break;
+      default:
+        break;
+    }
+  }
 }
 
 /* USER CODE END 4 */
